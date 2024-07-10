@@ -29,3 +29,41 @@ border-radius: 8px;
 stroke:1px rgb(13, 19, 33);
 opacity: 70%;
 }
+/* banner section */
+
+.banner{
+align-items: center;
+text-align: center;
+background-image: url(../assets/Hero-bg.png);
+background-position: center;
+background-size: cover;
+width: 100%;
+}
+.banner-content{
+    padding: 26px 210px 32px 231px;   
+    justify-content: center;
+}
+.img-1{
+    padding-top: 26px;
+}
+
+.banner-title{
+    font-weight: 800;
+font-size: 48px;}
+.banner-description{
+    font-weight: 400;
+    font-size: 16px;
+    padding: 24px 73px 32px 73px;
+    
+}
+.button-secondary{
+    background-color: #0D1321;
+    border-radius: 8px;
+color: rgb(255, 255, 255);
+font-weight: 600;
+font-size: 20px;
+    padding: 21px 24px;
+}
+
+
+/* shared style */
