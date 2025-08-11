@@ -286,23 +286,33 @@ class FMP_Admin {
 		$this->ensure_manage_capability();
 		check_admin_referer( 'fmp_export_csv' );
 		$year = isset( $_POST['year'] ) ? absint( $_POST['year'] ) : (int) current_time( 'Y' );
+		$all_years = ! empty( $_POST['all_years'] ) && '1' === (string) $_POST['all_years'];
 
-		$filename = 'fmp_members_' . $year . '_' . date( 'Ymd_His' ) . '.csv';
+		$filename = 'fmp_members_' . ( $all_years ? 'all_years' : $year ) . '_' . date( 'Ymd_His' ) . '.csv';
 		header( 'Content-Type: text/csv; charset=utf-8' );
 		header( 'Content-Disposition: attachment; filename=' . $filename );
 
 		$output = fopen( 'php://output', 'w' );
-		fputcsv( $output, [ 'name', 'phone', 'whatsapp', 'monthly_amount', 'months_paid' ] );
+		fputcsv( $output, [ 'name', 'phone', 'whatsapp', 'monthly_amount', 'year', 'months_paid' ] );
 
 		global $wpdb;
 		$members_table  = $wpdb->prefix . 'fmp_members';
 		$payments_table = $wpdb->prefix . 'fmp_payments';
 
 		$members = $wpdb->get_results( "SELECT id, name, phone, whatsapp, monthly_amount FROM $members_table WHERE active = 1" );
+		$years = [];
+		if ( $all_years ) {
+			$years = $wpdb->get_col( "SELECT DISTINCT year FROM $payments_table ORDER BY year DESC" );
+			if ( empty( $years ) ) { $years = [ $year ]; }
+		} else {
+			$years = [ $year ];
+		}
 		foreach ( $members as $m ) {
-			$paid_months = $wpdb->get_col( $wpdb->prepare( "SELECT month FROM $payments_table WHERE member_id=%d AND year=%d AND paid=1 ORDER BY month ASC", $m->id, $year ) );
-			$paid_str    = implode( '|', array_map( 'intval', $paid_months ) );
-			fputcsv( $output, [ $m->name, $m->phone, $m->whatsapp, $m->monthly_amount, $paid_str ] );
+			foreach ( $years as $yr ) {
+				$paid_months = $wpdb->get_col( $wpdb->prepare( "SELECT month FROM $payments_table WHERE member_id=%d AND year=%d AND paid=1 ORDER BY month ASC", $m->id, $yr ) );
+				$paid_str    = implode( '|', array_map( 'intval', $paid_months ) );
+				fputcsv( $output, [ $m->name, $m->phone, $m->whatsapp, $m->monthly_amount, $yr, $paid_str ] );
+			}
 		}
 		exit;
 	}
