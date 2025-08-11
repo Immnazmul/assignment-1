@@ -127,6 +127,7 @@ class FMP_Admin {
 		register_setting( 'fmp_settings_group', 'fmp_sender_id', [ 'sanitize_callback' => 'sanitize_text_field' ] );
 		register_setting( 'fmp_settings_group', 'fmp_cron_day', [ 'sanitize_callback' => 'absint' ] );
 		register_setting( 'fmp_settings_group', 'fmp_message_template', [ 'sanitize_callback' => 'wp_kses_post' ] );
+		register_setting( 'fmp_settings_group', 'fmp_msg_paid_template', [ 'sanitize_callback' => 'wp_kses_post' ] );
 	}
 
 	// Handlers
@@ -227,6 +228,7 @@ class FMP_Admin {
 
 		global $wpdb;
 		$payments_table = $wpdb->prefix . 'fmp_payments';
+		$members_table  = $wpdb->prefix . 'fmp_members';
 
 		$member_id = isset( $_POST['member_id'] ) ? absint( $_POST['member_id'] ) : 0;
 		$year      = isset( $_POST['year'] ) ? absint( $_POST['year'] ) : (int) current_time( 'Y' );
@@ -239,9 +241,13 @@ class FMP_Admin {
 			exit;
 		}
 
+		$member = $wpdb->get_row( $wpdb->prepare( "SELECT name, phone, whatsapp FROM $members_table WHERE id=%d", $member_id ) );
+		$paid_template = (string) get_option( 'fmp_msg_paid_template', '' );
+
 		foreach ( range( 1, 12 ) as $m ) {
 			$paid  = in_array( $m, $months, true ) ? 1 : 0;
-			$exists = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $payments_table WHERE member_id=%d AND year=%d AND month=%d", $member_id, $year, $m ) );
+			$exists = (int) $wpdb->get_var( $wpdb->prepare( "SELECT paid FROM $payments_table WHERE member_id=%d AND year=%d AND month=%d", $member_id, $year, $m ) );
+			$was_paid = $exists ? (int) $exists : 0;
 			$data  = [
 				'member_id' => $member_id,
 				'year'      => $year,
@@ -252,12 +258,23 @@ class FMP_Admin {
 				'updated_at'=> $now,
 			];
 			$format = [ '%d','%d','%d','%f','%d','%s','%s' ];
-			if ( $exists ) {
+			if ( $exists !== null ) {
 				$wpdb->update( $payments_table, $data, [ 'member_id' => $member_id, 'year' => $year, 'month' => $m ], $format, [ '%d','%d','%d' ] );
 			} else {
 				$data['created_at'] = $now;
 				$format[] = '%s';
 				$wpdb->insert( $payments_table, $data, $format );
+			}
+
+			if ( $paid && ! $was_paid && $member ) {
+				$label = date_i18n( 'F Y', mktime( 0, 0, 0, $m, 1, $year ) );
+				$msg = FMP_SMS::render_template( $paid_template, [
+					'name' => $member->name,
+					'month' => $label,
+					'amount' => number_format( (float) $amount, 2, '.', '' ),
+					'whatsapp' => $member->whatsapp,
+				] );
+				FMP_SMS::send_bulk( [ $member->phone ], $msg );
 			}
 		}
 

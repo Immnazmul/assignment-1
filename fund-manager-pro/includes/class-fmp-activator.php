@@ -78,6 +78,8 @@ class FMP_Activator {
 		add_option( 'fmp_sender_id', '' );
 		add_option( 'fmp_cron_day', 5 );
 		add_option( 'fmp_message_template', 'Hello {name}, you have unpaid dues for {month}. Amount: {amount}. WhatsApp: {whatsapp}.' );
+		add_option( 'fmp_msg_due_template', 'Dear {name}, your {month} dues amounting to {amount} are pending. Please pay at your earliest convenience.' );
+		add_option( 'fmp_msg_paid_template', 'Thank you {name}! We have received your payment for {month}. Amount: {amount}.' );
 	}
 
 	private static function schedule_cron() {
