@@ -17,6 +17,31 @@ class FMP_Cron {
 		add_action( 'fmp_daily_cron', [ $this, 'maybe_send_unpaid_sms' ] );
 	}
 
+	private function ensure_month_rows_for_all_members( int $year, int $month ) {
+		global $wpdb;
+		$members_table  = $wpdb->prefix . 'fmp_members';
+		$payments_table = $wpdb->prefix . 'fmp_payments';
+		$members = $wpdb->get_results( "SELECT id, monthly_amount FROM $members_table WHERE active=1" );
+		$now = current_time( 'mysql' );
+		foreach ( $members as $m ) {
+			for ( $mm = 1; $mm <= $month; $mm++ ) {
+				$exists = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM $payments_table WHERE member_id=%d AND year=%d AND month=%d", $m->id, $year, $mm ) );
+				if ( ! $exists ) {
+					$wpdb->insert( $payments_table, [
+						'member_id' => $m->id,
+						'year' => $year,
+						'month' => $mm,
+						'amount' => $m->monthly_amount,
+						'paid' => 0,
+						'paid_at' => null,
+						'created_at' => $now,
+						'updated_at' => $now,
+					], [ '%d','%d','%d','%f','%d','%s','%s','%s' ] );
+				}
+			}
+		}
+	}
+
 	public function maybe_send_unpaid_sms() {
 		$day = absint( get_option( 'fmp_cron_day', 5 ) );
 		if ( $day < 1 || $day > 28 ) {
@@ -34,6 +59,9 @@ class FMP_Cron {
 
 		$year  = (int) current_time( 'Y' );
 		$month = (int) current_time( 'n' );
+
+		// Ensure monthly rows exist up to current month
+		$this->ensure_month_rows_for_all_members( $year, $month );
 
 		// Members with unpaid dues up to previous month
 		$sql = "SELECT m.id, m.name, m.phone, m.whatsapp, m.monthly_amount

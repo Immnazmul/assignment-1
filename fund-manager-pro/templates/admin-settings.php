@@ -20,10 +20,16 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 					<td><input type="number" id="fmp_cron_day" name="fmp_cron_day" min="1" max="28" value="<?php echo esc_attr( get_option( 'fmp_cron_day', 5 ) ); ?>" /> <span class="description"><?php esc_html_e( 'Automated SMS runs on this day each month.', 'fund-manager-pro' ); ?></span></td>
 				</tr>
 				<tr>
-					<th><label for="fmp_message_template"><?php esc_html_e( 'Default Message Template', 'fund-manager-pro' ); ?></label></th>
+					<th><label for="fmp_message_template"><?php esc_html_e( 'Default Due Reminder Template', 'fund-manager-pro' ); ?></label></th>
 					<td>
-						<textarea id="fmp_message_template" name="fmp_message_template" class="large-text" rows="4"><?php echo esc_textarea( get_option( 'fmp_message_template', '' ) ); ?></textarea>
+						<textarea id="fmp_message_template" name="fmp_message_template" class="large-text" rows="4"><?php echo esc_textarea( get_option( 'fmp_message_template', get_option( 'fmp_msg_due_template', '' ) ) ); ?></textarea>
 						<p class="description"><?php esc_html_e( 'Available placeholders: {name}, {month}, {amount}, {whatsapp}', 'fund-manager-pro' ); ?></p>
+					</td>
+				</tr>
+				<tr>
+					<th><label for="fmp_msg_paid_template"><?php esc_html_e( 'Payment Received Template', 'fund-manager-pro' ); ?></label></th>
+					<td>
+						<textarea id="fmp_msg_paid_template" name="fmp_msg_paid_template" class="large-text" rows="3"><?php echo esc_textarea( get_option( 'fmp_msg_paid_template', '' ) ); ?></textarea>
 					</td>
 				</tr>
 			</tbody>
