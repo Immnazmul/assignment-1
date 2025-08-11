@@ -1,0 +1,7 @@
+.mfm-card{background:#fff;border:1px solid #e5e5e5;border-radius:6px;padding:16px;margin:16px 0}
+.mfm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.mfm-table{width:100%;border-collapse:collapse}
+.mfm-table th,.mfm-table td{border:1px solid #e5e5e5;padding:8px}
+.mfm-pagination a,.mfm-pagination span{display:inline-block;border:1px solid #ddd;padding:4px 8px;margin-right:6px;border-radius:4px}
+.mfm-pagination .current{background:#2271b1;color:#fff;border-color:#2271b1}
+.mfm-error{background:#fdd;border:1px solid #fbb;padding:8px;border-radius:4px;margin-bottom:10px}
