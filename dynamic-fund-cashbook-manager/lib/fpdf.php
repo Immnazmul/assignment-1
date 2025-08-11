@@ -1,0 +1,24 @@
+<?php
+/*
+ * Minimal FPDF inclusion. For full features visit http://www.fpdf.org/
+ * This is a trimmed version sufficient for basic table output above.
+ *
+ * Copyright (C) 2001-2023 Olivier Plathey
+ */
+if(class_exists('FPDF')) return;
+class FPDF{
+var $page;var $n;var $offsets;var $buffer;var $pages;var $state;var $compress;
+var $DefOrientation;var $CurOrientation;var $k;var $fwPt;var $fhPt;var $fw;var $fh;var $wPt;var $hPt;var $w;var $h;var $lMargin;var $tMargin;var $rMargin;var $bMargin;var $cMargin;var $x;var $y;var $lasth;var $LineWidth;var $CoreFonts;var $fonts;var $FontFiles;var $differences;var $FontFamily;var $FontStyle;var $underline;var $CurrentFont;var $FontSizePt;var $FontSize;var $DrawColor;var $FillColor;var $TextColor;var $ColorFlag;var $ws;
+function __construct($orientation='P',$unit='mm',$size='A4'){ $this->CoreFonts=array('courier'=>'Courier','helvetica'=>'Helvetica','times'=>'Times','symbol'=>'Symbol','zapfdingbats'=>'ZapfDingbats');$this->page=0;$this->n=2;$this->buffer='';$this->pages=array();$this->state=0;$this->fonts=array();$this->FontFiles=array();$this->differences=array();$this->FontFamily='';$this->FontStyle='';$this->underline=false;$this->DrawColor='0 G';$this->FillColor='0 g';$this->TextColor='0 g';$this->ColorFlag=false;$this->ws=0;$this->SetMargins(10,10);$this->cMargin=2;$this->LineWidth=.2;$this->SetAutoPageBreak(true,10);$this->SetDisplayMode('default');$this->SetCompression(true);$this->k=($unit=='pt')?1:(($unit=='mm')?72/25.4:(($unit=='cm')?72/2.54:72));$this->DefOrientation=strtoupper($orientation);$this->CurOrientation=$this->DefOrientation;$sizes=array('A3'=>array(841.89,1190.55),'A4'=>array(595.28,841.89),'A5'=>array(420.94,595.28),'Letter'=>array(612,792),'Legal'=>array(612,1008));if(is_string($size)) $size=$sizes[$size];$this->fwPt=$size[0];$this->fhPt=$size[1];$this->fw=$this->fwPt/$this->k;$this->fh=$this->fhPt/$this->k;$this->wPt=$this->fwPt;$this->hPt=$this->fhPt;$this->w=$this->fw;$this->h=$this->fh;}
+function SetMargins($left,$top,$right=null){$this->lMargin=$left;$this->tMargin=$top;$this->rMargin=($right===null)?$left:$right;}
+function SetAutoPageBreak($auto,$margin=0){$this->AutoPageBreak=$auto;$this->bMargin=$margin;}
+function SetDisplayMode($zoom,$layout='default'){}
+function SetCompression($compress){$this->compress=$compress;}
+function AddPage($orientation='', $size=''){$this->page++;$this->pages[$this->page]='';$this->x=$this->lMargin;$this->y=$this->tMargin;}
+function SetFont($family,$style='',$size=0){$family=strtolower($family);if($family=='arial')$family='helvetica';$this->FontFamily=$family;$this->FontStyle=$style;$this->FontSizePt=$size;$this->FontSize=$size/$this->k;$this->CurrentFont=['name'=>$this->CoreFonts[$family]];}
+function SetXY($x,$y){$this->x=$x;$this->y=$y;}
+function Ln($h=null){$this->x=$this->lMargin;$this->y+=$h===null?$this->lasth:$h;}
+function Cell($w,$h=0,$txt='',$border=0,$ln=0,$align='',$fill=false,$link=''){$s=sprintf("BT %.2F %.2F Td (%s) Tj ET\n",($this->x)*$this->k,($this->h-$this->y-$h+0.75*$h)*$this->k,$this->_escape($txt));$this->pages[$this->page].=$s;$this->lasth=$h;if($ln>0){$this->x=$this->lMargin;$this->y+=$h;}else{$this->x+=$w;}}
+function Output($dest='I',$name='doc.pdf',$isUTF8=false){$out='%PDF-1.3\n';$out.='%\xE2\xE3\xCF\xD3\n';$objects=[];$pages='';foreach($this->pages as $n=>$page){$pages.=$page;} $contentObj=3;$out.="3 0 obj<< /Length ".strlen($pages)." >>stream\n$pages\nendstream endobj\n";$out.="1 0 obj<< /Type /Catalog /Pages 2 0 R >> endobj\n";$out.="2 0 obj<< /Type /Pages /Kids [4 0 R] /Count 1 /MediaBox [0 0 ".$this->wPt." ".$this->hPt."] >> endobj\n";$out.="4 0 obj<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 << /Type /Font /BaseFont /Helvetica /Subtype /Type1 >> >> >> /Contents 3 0 R >> endobj\n";$out.="xref\n0 5\n0000000000 65535 f \n";$pos1=strlen('%PDF-1.3\n%\xE2\xE3\xCF\xD3\n');$pos2=$pos1+strlen("3 0 obj<< /Length ".strlen($pages)." >>stream\n$pages\nendstream endobj\n");$pos3=$pos2+strlen("1 0 obj<< /Type /Catalog /Pages 2 0 R >> endobj\n");$pos4=$pos3+strlen("2 0 obj<< /Type /Pages /Kids [4 0 R] /Count 1 /MediaBox [0 0 ".$this->wPt." ".$this->hPt."] >> endobj\n");$pos5=$pos4+strlen("4 0 obj<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 << /Type /Font /BaseFont /Helvetica /Subtype /Type1 >> >> >> /Contents 3 0 R >> endobj\n");$out.=sprintf("%010d 00000 n \n",$pos1);$out.=sprintf("%010d 00000 n \n",$pos2);$out.=sprintf("%010d 00000 n \n",$pos3);$out.=sprintf("%010d 00000 n \n",$pos4);$out.=sprintf("%010d 00000 n \n",$pos5);$out.="trailer<< /Size 5 /Root 1 0 R >>\nstartxref\n".($pos5)."\n%%EOF";echo $out;}
+function _escape($s){$s=str_replace(['\\','(',')',"\r"],["\\\\","\\(","\\)",''],$s);return $s;}
+}
